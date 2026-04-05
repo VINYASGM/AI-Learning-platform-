@@ -1,12 +1,31 @@
+import { useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Bot, User, Sparkles } from 'lucide-react';
+import { Bot, User, Sparkles, FileText, Image, Music, Film, Code } from 'lucide-react';
 import { TypingIndicator } from './TypingIndicator';
 import { useLearnerState } from '../../context/LearnerStateContext';
+import { fileUploadService } from '../../services/FileUploadService';
+
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case 'image': return <Image size={14} />;
+    case 'document': return <FileText size={14} />;
+    case 'audio': return <Music size={14} />;
+    case 'video': return <Film size={14} />;
+    case 'code': return <Code size={14} />;
+    default: return <FileText size={14} />;
+  }
+};
 
 export function ChatWindow() {
   const { chatHistory, isTyping } = useLearnerState();
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom on new messages or when AI starts typing
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory, isTyping]);
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth bg-gradient-to-b from-background to-muted/20">
+    <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 lg:space-y-8 scroll-smooth bg-gradient-to-b from-background to-muted/20">
       <div className="text-center mb-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -56,6 +75,35 @@ export function ChatWindow() {
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 mx-2 opacity-70">
               {msg.role === 'tutor' ? 'Lumina AI' : 'You'}
             </span>
+
+            {/* File Attachments Preview (above message for student) */}
+            {msg.attachments && msg.attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2 mx-1">
+                {msg.attachments.map(file => (
+                  <div
+                    key={file.id}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[11px] ${
+                      msg.role === 'student'
+                        ? 'bg-background/20 text-background/80 border border-background/10'
+                        : 'bg-muted/60 text-muted-foreground border border-border/30'
+                    }`}
+                  >
+                    {file.previewUrl ? (
+                      <img 
+                        src={file.previewUrl} 
+                        alt={file.name}
+                        className="w-6 h-6 rounded object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs">{getCategoryIcon(file.category)}</span>
+                    )}
+                    <span className="truncate max-w-[100px]">{file.name}</span>
+                    <span className="opacity-60">{fileUploadService.formatSize(file.size)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <motion.div 
               whileHover={{ scale: 1.01 }}
               className={`px-5 py-4 text-[15px] leading-relaxed shadow-sm relative ${
@@ -109,6 +157,9 @@ export function ChatWindow() {
           </div>
         </motion.div>
       )}
+
+      {/* Scroll anchor — always at the bottom */}
+      <div ref={bottomRef} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, Circle, Lock, Trophy, CalendarClock, BrainCircuit, Search, X, Info, BookOpen, ListTree, Network, BookPlus } from 'lucide-react';
+import { CheckCircle2, Circle, Lock, Trophy, CalendarClock, BrainCircuit, Search, X, Info, BookOpen, ListTree, Network, BookPlus, RefreshCw, AlertTriangle, Sparkles, GitBranch, Zap } from 'lucide-react';
 import { useLearnerState } from '../../context/LearnerStateContext';
 import { REVIEW_THRESHOLD_MS } from '../../services/AdaptiveScheduler';
 
@@ -21,7 +21,7 @@ interface ProgressSidebarProps {
 }
 
 export function ProgressSidebar({ onOpenKnowledgeGraph }: ProgressSidebarProps) {
-  const { nodes, masteryProbabilities, lastReviewed, activeVariant, toneProfile, currentTopicId } = useLearnerState();
+  const { nodes, masteryProbabilities, lastReviewed, activeVariant, toneProfile, currentTopicId, recursiveMetrics } = useLearnerState();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState<UITopic | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -148,7 +148,225 @@ export function ProgressSidebar({ onOpenKnowledgeGraph }: ProgressSidebarProps) 
           </div>
         </div>
       </motion.div>
-      
+
+      {/* ── Recursive Learning Intelligence Panel ── */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mb-8"
+      >
+        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+          <RefreshCw size={10} className="text-orange-500" />
+          Recursive Intelligence
+        </h2>
+        <div className="space-y-3">
+          {/* Core Metrics Grid */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-2.5 rounded-xl bg-card border border-border shadow-sm text-center">
+              <div className="text-lg font-bold text-foreground">{recursiveMetrics.totalEpisodes}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Episodes</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-card border border-border shadow-sm text-center">
+              <div className="text-lg font-bold text-foreground">{recursiveMetrics.totalSelfReflections}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Reflections</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-card border border-border shadow-sm text-center">
+              <div className="text-lg font-bold text-foreground">{recursiveMetrics.activeInterventions}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Interventions</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-card border border-border shadow-sm text-center">
+              <div className="text-lg font-bold text-foreground">{recursiveMetrics.curriculumEvolutions}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Evolutions</div>
+            </div>
+          </div>
+
+          {/* Performance Score */}
+          <div className="p-3 rounded-xl bg-card border border-border shadow-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles size={14} className="text-yellow-500" />
+              <div className="font-medium text-sm text-muted-foreground">Composite Score</div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(recursiveMetrics.avgCompositeScore * 100).toFixed(0)}%` }}
+                  transition={{ duration: 1, ease: 'easeOut' }}
+                  className={`h-full rounded-full ${
+                    recursiveMetrics.avgCompositeScore > 0.7 ? 'bg-green-500' :
+                    recursiveMetrics.avgCompositeScore > 0.4 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                />
+              </div>
+              <span className="text-xs font-bold text-foreground min-w-[3ch]">
+                {(recursiveMetrics.avgCompositeScore * 100).toFixed(0)}%
+              </span>
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">Avg clarity + engagement + progress + efficiency</div>
+          </div>
+
+          {/* Active Patterns */}
+          {recursiveMetrics.recentPatterns.length > 0 && (
+            <div className="p-3 rounded-xl bg-card border border-orange-500/30 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle size={14} className="text-orange-500" />
+                <div className="font-medium text-sm text-orange-500">Detected Patterns</div>
+              </div>
+              <div className="space-y-1.5">
+                {recursiveMetrics.recentPatterns.slice(0, 3).map((pattern, i) => (
+                  <div key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                    <Zap size={10} className="text-orange-400 mt-0.5 flex-shrink-0" />
+                    <span>{pattern.type.replace(/_/g, ' ')} — {(pattern.confidence * 100).toFixed(0)}% confidence</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Last Self-Reflection */}
+          {recursiveMetrics.lastReflection && (
+            <div className="p-3 rounded-xl bg-card border border-purple-500/30 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <GitBranch size={14} className="text-purple-500" />
+                <div className="font-medium text-sm text-purple-500">Last Reflection</div>
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                Depth: <span className="font-medium text-foreground">{recursiveMetrics.lastReflection.depthUsed.toUpperCase()}</span>
+              </div>
+              <div className="text-[10px] text-muted-foreground mt-1 line-clamp-2">
+                {recursiveMetrics.lastReflection.selfCritique.split('\n')[0]}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── V2 Cognitive Dashboard ── */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="mb-8"
+      >
+        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+          <Zap size={10} className="text-cyan-500" />
+          Cognitive Dashboard
+        </h2>
+        <div className="space-y-3">
+          {/* Affective State Gauges */}
+          <div className="p-3 rounded-xl bg-card border border-border shadow-sm">
+            <div className="font-medium text-[11px] text-muted-foreground mb-2">Affective State</div>
+            <div className="space-y-2">
+              {[
+                { label: 'Energy', value: recursiveMetrics.affectiveState.energy, color: 'bg-green-500', emoji: '⚡' },
+                { label: 'Curiosity', value: recursiveMetrics.affectiveState.curiosity, color: 'bg-blue-500', emoji: '🔍' },
+                { label: 'Frustration', value: recursiveMetrics.affectiveState.frustration, color: 'bg-red-500', emoji: '😤' },
+                { label: 'Confidence', value: recursiveMetrics.affectiveState.confidence, color: 'bg-yellow-500', emoji: '💪' },
+              ].map(gauge => (
+                <div key={gauge.label} className="flex items-center gap-2">
+                  <span className="text-[10px] w-2">{gauge.emoji}</span>
+                  <span className="text-[10px] text-muted-foreground w-16">{gauge.label}</span>
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(gauge.value * 100)}%` }}
+                      transition={{ duration: 0.5 }}
+                      className={`h-full rounded-full ${gauge.color}`}
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium min-w-[3ch]">{(gauge.value * 100).toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Model Tier & Critique */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-2.5 rounded-xl bg-card border border-border shadow-sm text-center">
+              <div className={`text-sm font-bold ${
+                recursiveMetrics.currentModelTier === 'frontier' ? 'text-purple-500' :
+                recursiveMetrics.currentModelTier === 'mid' ? 'text-blue-500' : 'text-green-500'
+              }`}>
+                {recursiveMetrics.currentModelTier.toUpperCase()}
+              </div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Model Tier</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-card border border-border shadow-sm text-center">
+              <div className="text-sm font-bold text-foreground">
+                {(recursiveMetrics.critiqueStats.rejectionRate * 100).toFixed(0)}%
+              </div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Critique Rate</div>
+            </div>
+          </div>
+
+          {/* Reward Sparkline */}
+          {recursiveMetrics.rewardTrajectory.length > 0 && (
+            <div className="p-3 rounded-xl bg-card border border-border shadow-sm">
+              <div className="font-medium text-[11px] text-muted-foreground mb-2">Reward Trajectory</div>
+              <div className="flex items-end gap-[2px] h-8">
+                {recursiveMetrics.rewardTrajectory.slice(-20).map((r, i) => (
+                  <div
+                    key={i}
+                    className={`flex-1 rounded-sm ${r >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                    style={{ height: `${Math.max(8, Math.abs(r) * 100)}%`, opacity: 0.4 + (i / 20) * 0.6 }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Active Misconceptions */}
+          {recursiveMetrics.activeMisconceptions.length > 0 && (
+            <div className="p-3 rounded-xl bg-card border border-red-500/30 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle size={14} className="text-red-500" />
+                <div className="font-medium text-sm text-red-500">
+                  Misconceptions ({recursiveMetrics.activeMisconceptions.length})
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                {recursiveMetrics.activeMisconceptions.slice(0, 3).map((m, i) => (
+                  <div key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                    <span className={`inline-block w-1.5 h-1.5 rounded-full mt-1 flex-shrink-0 ${
+                      m.status === 'confirmed' ? 'bg-red-500' :
+                      m.status === 'suspected' ? 'bg-orange-500' : 'bg-yellow-500'
+                    }`} />
+                    <span className="line-clamp-1">{m.pattern}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Scaffolding Levels */}
+          {Object.keys(recursiveMetrics.scaffoldingLevels).length > 0 && (
+            <div className="p-3 rounded-xl bg-card border border-border shadow-sm">
+              <div className="font-medium text-[11px] text-muted-foreground mb-2">Scaffolding Fade</div>
+              <div className="space-y-1.5">
+                {Object.entries(recursiveMetrics.scaffoldingLevels).slice(0, 4).map(([id, rawLevel]) => {
+                  const level = rawLevel as number;
+                  return (
+                  <div key={id} className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground truncate w-20">{id.replace('sub-', '').replace('topic-', '')}</span>
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          level > 0.6 ? 'bg-blue-500' : level > 0.3 ? 'bg-cyan-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${level * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-medium min-w-[3ch]">{(level * 100).toFixed(0)}%</span>
+                  </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
       <div className="flex-1">
         <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">Curriculum Tracking</h2>
         
